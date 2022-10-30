@@ -22,16 +22,19 @@ func Migrate(db *gorm.DB) {
 	//if err != nil {
 	//	log.Println(err)
 	//}
+	//if err := db.SetupJoinTable(&models.Store{}, "Products", &models.StoreProduct{}); err != nil {
+	//	log.Println(err)
 
+	//}
 	if err := db.AutoMigrate(
 		&models.Store{},
 		&models.User{},
 		&models.UserProfile{},
-		&models.StoreProduct{},
+		&models.Product{},
 		&models.CreditCard{},
 		&models.Category{},
-		&models.Product{},
 		&models.Order{},
+		&models.StoreProduct{},
 		&models.ProductOrder{},
 		&models.Payment{},
 	); err != nil {

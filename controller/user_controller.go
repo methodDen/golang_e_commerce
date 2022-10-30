@@ -111,6 +111,7 @@ func (h userController) AddUser(enforcer *casbin.Enforcer) gin.HandlerFunc {
 		}
 		db := models.GetDB()
 		db.Create(&user)
+		db.Create(&models.UserProfile{UserID: user.ID})
 		enforcer.AddGroupingPolicy(fmt.Sprint(user.ID), user.Role)
 		user.Password = ""
 		ctx.JSON(http.StatusOK, user)

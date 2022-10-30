@@ -12,7 +12,7 @@ type Store struct {
 	PhoneNumber string
 	Website     string
 	Users       []User
-	Products    []*Product `gorm:"many2many:store_products"`
+	Products    []*Product `gorm:"many2many:store_products;"`
 }
 
 func (Store) TableName() string {
@@ -20,9 +20,11 @@ func (Store) TableName() string {
 }
 
 type StoreProduct struct {
-	StoreID   uint `gorm:"primaryKey"`
-	ProductID uint `gorm:"primaryKey"`
-	Amount    uint `gorm:"not null"`
+	StoreID   uint   `gorm:"primaryKey"`
+	ProductID uint   `gorm:"primaryKey"`
+	Amount    uint   `gorm:"not null"`
+	Price     uint   `gorm:"not null"`
+	Status    string `gorm:"not null"`
 }
 
 func (StoreProduct) TableName() string {
