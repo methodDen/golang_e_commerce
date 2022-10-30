@@ -4,7 +4,6 @@ import (
 	"E-Commerce/models"
 	"E-Commerce/route"
 	"gorm.io/gorm"
-	"log"
 )
 
 func Migrate(db *gorm.DB) {
@@ -22,20 +21,20 @@ func Migrate(db *gorm.DB) {
 	//if err != nil {
 	//	log.Println(err)
 	//}
-	if err := db.AutoMigrate(
-		&models.Store{},
-		&models.User{},
-		&models.UserProfile{},
-		&models.Product{},
-		&models.CreditCard{},
-		&models.Category{},
-		&models.Order{},
-		&models.StoreProduct{},
-		&models.ProductOrder{},
-		&models.Payment{},
-	); err != nil {
-		log.Println(err)
-	}
+	//if err := db.AutoMigrate(
+	//	&models.Store{},
+	//	&models.User{},
+	//	&models.UserProfile{},
+	//	&models.Product{},
+	//	&models.CreditCard{},
+	//	&models.Category{},
+	//	&models.Order{},
+	//	&models.StoreProduct{},
+	//	&models.ProductOrder{},
+	//	&models.Payment{},
+	//); err != nil {
+	//	log.Println(err)
+	//}
 }
 
 func main() {

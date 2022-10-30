@@ -26,11 +26,11 @@ func SetupEnforcerPolicies(db *gorm.DB) *casbin.Enforcer {
 	}
 
 	//add policy for client and story_admin
-	if hasPolicy := enforcer.HasPolicy("CLIENT", "profile", "read"); !hasPolicy {
-		enforcer.AddPolicy("CLIENT", "profile", "read")
+	if hasPolicy := enforcer.HasPolicy("STOREADMIN", "profile", "read"); !hasPolicy {
+		enforcer.AddPolicy("STOREADMIN", "profile", "read")
 	}
-	if hasPolicy := enforcer.HasPolicy("CLIENT", "profile", "update"); !hasPolicy {
-		enforcer.AddPolicy("CLIENT", "profile", "update")
+	if hasPolicy := enforcer.HasPolicy("STOREADMIN", "profile", "update"); !hasPolicy {
+		enforcer.AddPolicy("STOREADMIN", "profile", "update")
 	}
 	if hasPolicy := enforcer.HasPolicy("STOREADMIN", "profile", "read"); !hasPolicy {
 		enforcer.AddPolicy("CLIENT", "profile", "read")
