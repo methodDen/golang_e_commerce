@@ -2,6 +2,7 @@ package repository
 
 import (
 	"E-Commerce/models"
+	"E-Commerce/serializers/request"
 	"gorm.io/gorm"
 )
 
@@ -11,7 +12,7 @@ type userProfileRepository struct {
 
 type UserProfileRepository interface {
 	GetUserProfile(int) (models.UserProfile, error)
-	UpdateUserProfile(models.UserProfile) (models.UserProfile, error)
+	UpdateUserProfile(models.UserProfile, request.UpdateUserProfileInput) (models.UserProfile, error)
 }
 
 func NewUserProfileRepository(db *gorm.DB) UserProfileRepository {
@@ -25,9 +26,14 @@ func (u userProfileRepository) GetUserProfile(userID int) (userProfile models.Us
 	return userProfile, u.DB.Where("user_id = ?", userID).First(&userProfile).Error
 }
 
-func (u userProfileRepository) UpdateUserProfile(userProfile models.UserProfile) (models.UserProfile, error) {
-	if err := u.DB.Where("user_id = ?", userProfile.UserID).First(&userProfile).Error; err != nil {
-		return userProfile, err
-	}
-	return userProfile, u.DB.Model(&userProfile).Updates(&userProfile).Error
+func (u userProfileRepository) UpdateUserProfile(
+	userProfile models.UserProfile,
+	input request.UpdateUserProfileInput,
+) (models.UserProfile, error) {
+	userProfile.FirstName = input.FirstName
+	userProfile.LastName = input.LastName
+	userProfile.Country = input.Country
+	userProfile.City = input.City
+	userProfile.Address = input.Address
+	return userProfile, u.DB.Save(&userProfile).Error
 }

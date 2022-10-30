@@ -19,7 +19,7 @@ type UserController interface {
 	AddUser(enforcer *casbin.Enforcer) gin.HandlerFunc
 	GetUserProfile(*gin.Context)
 	SignInUser(*gin.Context)
-	//UpdateUserProfile(*gin.Context)
+	UpdateUserProfile(*gin.Context)
 	//UpdateUserCredentials(*gin.Context)
 }
 
@@ -29,7 +29,6 @@ type userController struct {
 	userProfileRepo repository.UserProfileRepository
 }
 
-//NewUserController -> returns new user controller
 func NewUserController(
 	userRepo repository.UserRepository,
 	storeRepo repository.StoreRepository,
@@ -43,27 +42,13 @@ func NewUserController(
 }
 
 func (h userController) GetUserProfile(ctx *gin.Context) {
-	id := ctx.Param("user")
-	intID, err := strconv.Atoi(id)
-	userExists, err := h.userRepo.UserExistsByID(intID)
-	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
-	}
-	if !userExists {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": "User doesn't exist"})
-		return
-	}
-	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
+	id, _ := ctx.Get("userID")
+	intID := int(id.(float64))
 	userProfile, err := h.userProfileRepo.GetUserProfile(intID)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-
 	resp := response.UserProfileResponse{
 		ID:        userProfile.ID,
 		UserID:    userProfile.UserID,
@@ -75,6 +60,36 @@ func (h userController) GetUserProfile(ctx *gin.Context) {
 	}
 	ctx.JSON(http.StatusOK, resp)
 
+}
+
+func (h userController) UpdateUserProfile(context *gin.Context) {
+	var input request.UpdateUserProfileInput
+	if err := context.ShouldBindJSON(&input); err != nil {
+		context.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	id, _ := context.Get("userID")
+	intID := int(id.(float64))
+	userProfile, err := h.userProfileRepo.GetUserProfile(intID)
+	if err != nil {
+		context.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	userProfile, err = h.userProfileRepo.UpdateUserProfile(userProfile, input)
+	if err != nil {
+		context.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	resp := response.UserProfileResponse{
+		ID:        userProfile.ID,
+		UserID:    userProfile.UserID,
+		FirstName: userProfile.FirstName,
+		LastName:  userProfile.LastName,
+		Country:   userProfile.Country,
+		City:      userProfile.City,
+		Address:   userProfile.Address,
+	}
+	context.JSON(http.StatusOK, resp)
 }
 
 func (h userController) SignInUser(ctx *gin.Context) {

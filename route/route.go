@@ -20,24 +20,24 @@ func SetupEnforcerPolicies(db *gorm.DB) *casbin.Enforcer {
 		panic(fmt.Sprintf("failed to initialize casbin adapter: %v", err))
 	}
 
-	// Load model configuration file and policy store adapter
 	enforcer, err := casbin.NewEnforcer("config/rbac_model.conf", adapter)
 	if err != nil {
 		panic(fmt.Sprintf("failed to create casbin enforcer: %v", err))
 	}
 
 	//add policy for client and story_admin
-	if hasPolicy := enforcer.HasPolicy("CLIENT", "report", "read"); !hasPolicy {
-		enforcer.AddPolicy("CLIENT", "report", "read")
+	if hasPolicy := enforcer.HasPolicy("CLIENT", "profile", "read"); !hasPolicy {
+		enforcer.AddPolicy("CLIENT", "profile", "read")
 	}
-	if hasPolicy := enforcer.HasPolicy("STOREADMIN", "report", "write"); !hasPolicy {
-		enforcer.AddPolicy("STOREADMIN", "report", "write")
+	if hasPolicy := enforcer.HasPolicy("CLIENT", "profile", "update"); !hasPolicy {
+		enforcer.AddPolicy("CLIENT", "profile", "update")
 	}
-	if hasPolicy := enforcer.HasPolicy("CLIENT", "report", "read"); !hasPolicy {
-		enforcer.AddPolicy("STOREADMIN", "report", "read")
+	if hasPolicy := enforcer.HasPolicy("STOREADMIN", "profile", "read"); !hasPolicy {
+		enforcer.AddPolicy("CLIENT", "profile", "read")
 	}
-
-	// add policy for supermoderator
+	if hasPolicy := enforcer.HasPolicy("CLIENT", "profile", "update"); !hasPolicy {
+		enforcer.AddPolicy("CLIENT", "profile", "update")
+	}
 
 	return enforcer
 }
@@ -65,8 +65,14 @@ func SetupRoutes(db *gorm.DB) {
 	apiRoutes := httpRouter.Group("/api")
 
 	{
-		apiRoutes.POST("/register/", userController.AddUser(enforcer))
-		apiRoutes.POST("/signin/", userController.SignInUser)
+		apiRoutes.POST(
+			"/register/",
+			userController.AddUser(enforcer),
+		)
+		apiRoutes.POST(
+			"/signin/",
+			userController.SignInUser,
+		)
 	}
 
 	storeRoutes := apiRoutes.Group("/store")
@@ -76,8 +82,16 @@ func SetupRoutes(db *gorm.DB) {
 
 	userProtectedRoutes := apiRoutes.Group("/users", middleware.AuthorizeJWT())
 	{
-		userProtectedRoutes.GET("/:user/user_profile/", middleware.Authorize("report", "read", enforcer), userController.GetUserProfile)
-		//userProtectedRoutes.PUT("/:user/user_profile/", middleware.Authorize("report", "write", enforcer), userController.UpdateUser)
+		userProtectedRoutes.GET(
+			"/my/user_profile/",
+			middleware.Authorize("profile", "read", enforcer),
+			userController.GetUserProfile,
+		)
+		userProtectedRoutes.PUT(
+			"/my/user_profile/",
+			middleware.Authorize("profile", "update", enforcer),
+			userController.UpdateUserProfile,
+		)
 	}
 
 	httpRouter.Run()
