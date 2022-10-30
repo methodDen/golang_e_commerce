@@ -5,6 +5,7 @@ import (
 	"E-Commerce/models"
 	"E-Commerce/repository"
 	"E-Commerce/serializers/request"
+	"E-Commerce/serializers/response"
 	"fmt"
 	"github.com/casbin/casbin/v2"
 	"net/http"
@@ -16,39 +17,63 @@ import (
 // UserController : represent the user's controller contract
 type UserController interface {
 	AddUser(enforcer *casbin.Enforcer) gin.HandlerFunc
-	GetUser(*gin.Context)
+	GetUserProfile(*gin.Context)
 	SignInUser(*gin.Context)
-	UpdateUser(*gin.Context)
-	DeleteUser(*gin.Context)
+	//UpdateUserProfile(*gin.Context)
+	//UpdateUserCredentials(*gin.Context)
 }
 
 type userController struct {
-	userRepo  repository.UserRepository
-	storeRepo repository.StoreRepository
+	userRepo        repository.UserRepository
+	storeRepo       repository.StoreRepository
+	userProfileRepo repository.UserProfileRepository
 }
 
 //NewUserController -> returns new user controller
-func NewUserController(userRepo repository.UserRepository, storeRepo repository.StoreRepository) UserController {
+func NewUserController(
+	userRepo repository.UserRepository,
+	storeRepo repository.StoreRepository,
+	userProfileRepo repository.UserProfileRepository,
+) UserController {
 	return userController{
-		userRepo:  userRepo,
-		storeRepo: storeRepo,
+		userRepo:        userRepo,
+		storeRepo:       storeRepo,
+		userProfileRepo: userProfileRepo,
 	}
 }
 
-func (h userController) GetUser(ctx *gin.Context) {
+func (h userController) GetUserProfile(ctx *gin.Context) {
 	id := ctx.Param("user")
 	intID, err := strconv.Atoi(id)
+	userExists, err := h.userRepo.UserExistsByID(intID)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	if !userExists {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "User doesn't exist"})
+		return
+	}
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	user, err := h.userRepo.GetUser(intID)
+	userProfile, err := h.userProfileRepo.GetUserProfile(intID)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
-
 	}
-	ctx.JSON(http.StatusOK, user)
+
+	resp := response.UserProfileResponse{
+		ID:        userProfile.ID,
+		UserID:    userProfile.UserID,
+		FirstName: userProfile.FirstName,
+		LastName:  userProfile.LastName,
+		Country:   userProfile.Country,
+		City:      userProfile.City,
+		Address:   userProfile.Address,
+	}
+	ctx.JSON(http.StatusOK, resp)
 
 }
 
@@ -59,7 +84,7 @@ func (h userController) SignInUser(ctx *gin.Context) {
 	}
 	dbUser, err := h.userRepo.GetByEmail(input.Email)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{"msg": "No Such User Found"})
+		ctx.JSON(http.StatusNotFound, gin.H{"msg": "No Such User Found"})
 		return
 	}
 	if isTrue := common.ComparePassword(dbUser.Password, input.Password); isTrue {
@@ -80,7 +105,7 @@ func (h userController) AddUser(enforcer *casbin.Enforcer) gin.HandlerFunc {
 			ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
-		userExists, err := h.userRepo.UserExists(input.Email)
+		userExists, err := h.userRepo.UserExistsByEmail(input.Email)
 		if err != nil {
 			ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
@@ -132,21 +157,6 @@ func (h userController) UpdateUser(ctx *gin.Context) {
 	}
 	user.ID = uint(intID)
 	user, err = h.userRepo.UpdateUser(user)
-	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
-
-	}
-	ctx.JSON(http.StatusOK, user)
-
-}
-
-func (h userController) DeleteUser(ctx *gin.Context) {
-	var user models.User
-	id := ctx.Param("user")
-	intID, _ := strconv.Atoi(id)
-	user.ID = uint(intID)
-	user, err := h.userRepo.DeleteUser(user)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return

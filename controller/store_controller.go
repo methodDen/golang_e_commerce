@@ -37,7 +37,6 @@ func (s storeController) GetProductsByStoreID(context *gin.Context) {
 	context.JSON(http.StatusOK, resp)
 }
 
-//NewUserController -> returns new user controller
 func NewStoreController(storeRepo repository.StoreRepository, productRepo repository.ProductRepository) StoreController {
 	return storeController{
 		storeRepo:   storeRepo,

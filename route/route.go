@@ -45,16 +45,22 @@ func SetupEnforcerPolicies(db *gorm.DB) *casbin.Enforcer {
 func SetupRoutes(db *gorm.DB) {
 	httpRouter := gin.Default()
 
-	// Initialize  casbin adapter
+	// Initialize  repositories
 
 	userRepository := repository.NewUserRepository(db)
 	storeRepository := repository.NewStoreRepository(db)
 	productRepository := repository.NewProductRepository(db)
+	userProfileRepository := repository.NewUserProfileRepository(db)
+	// Initalize controllers
 
-	userController := controller.NewUserController(userRepository, storeRepository)
+	userController := controller.NewUserController(userRepository, storeRepository, userProfileRepository)
 	storeController := controller.NewStoreController(storeRepository, productRepository)
 
+	// initialize enforcer
+
 	enforcer := SetupEnforcerPolicies(db)
+
+	// Routes
 
 	apiRoutes := httpRouter.Group("/api")
 
@@ -70,9 +76,8 @@ func SetupRoutes(db *gorm.DB) {
 
 	userProtectedRoutes := apiRoutes.Group("/users", middleware.AuthorizeJWT())
 	{
-		userProtectedRoutes.GET("/:user", middleware.Authorize("report", "read", enforcer), userController.GetUser)
-		userProtectedRoutes.PUT("/:user", middleware.Authorize("report", "write", enforcer), userController.UpdateUser)
-		userProtectedRoutes.DELETE("/:user", middleware.Authorize("report", "write", enforcer), userController.DeleteUser)
+		userProtectedRoutes.GET("/:user/user_profile/", middleware.Authorize("report", "read", enforcer), userController.GetUserProfile)
+		//userProtectedRoutes.PUT("/:user/user_profile/", middleware.Authorize("report", "write", enforcer), userController.UpdateUser)
 	}
 
 	httpRouter.Run()
