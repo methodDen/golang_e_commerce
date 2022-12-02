@@ -24,6 +24,7 @@ func Authorize(obj string, act string, enforcer *casbin.Enforcer) gin.HandlerFun
 
 		// Casbin enforces policy
 		ok, err := enforcer.Enforce(fmt.Sprint(sub), obj, act)
+		fmt.Println(sub)
 
 		if err != nil {
 			c.AbortWithStatusJSON(500, gin.H{"msg": "Error occurred when authorizing user"})

@@ -38,6 +38,9 @@ func SetupEnforcerPolicies(db *gorm.DB) *casbin.Enforcer {
 	if hasPolicy := enforcer.HasPolicy("CLIENT", "profile", "update"); !hasPolicy {
 		enforcer.AddPolicy("CLIENT", "profile", "update")
 	}
+	if hasPolicy := enforcer.HasPolicy("STOREADMIN", "store", "update"); !hasPolicy {
+		enforcer.AddPolicy("STOREADMIN", "store", "update")
+	}
 
 	return enforcer
 }
@@ -78,6 +81,12 @@ func SetupRoutes(db *gorm.DB) {
 	storeRoutes := apiRoutes.Group("/store")
 	{
 		storeRoutes.GET("/:id/products", storeController.GetProductsByStoreID)
+		//storeRoutes.POST("/:id/products", storeController.AddProduct)
+	}
+
+	storeProtectedRoutes := apiRoutes.Group("/store", middleware.AuthorizeJWT())
+	{
+		storeProtectedRoutes.POST("/:id/products", middleware.Authorize("store", "update", enforcer), storeController.AddProduct)
 	}
 
 	userProtectedRoutes := apiRoutes.Group("/users", middleware.AuthorizeJWT())
