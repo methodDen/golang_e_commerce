@@ -18,6 +18,7 @@ type StoreController interface {
 type storeController struct {
 	storeRepo   repository.StoreRepository
 	productRepo repository.ProductRepository
+	ordersRepo  repository.OrdersRepo
 }
 
 func (s storeController) GetProductsByStoreID(context *gin.Context) {
@@ -58,6 +59,10 @@ func (s storeController) AddProduct(ctx *gin.Context) {
 		return
 	}
 	ctx.JSON(http.StatusCreated, response.ProductResponse{ID: product.ID, Name: product.Name, Description: product.Description})
+}
+
+func (s storeController) GetStoreOrders(ctx *gin.Context) {
+
 }
 
 func NewStoreController(storeRepo repository.StoreRepository, productRepo repository.ProductRepository) StoreController {
